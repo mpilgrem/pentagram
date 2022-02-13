@@ -1,0 +1,47 @@
+name:                pentagram
+version:             0.1.0.0
+github:              "mpilgrem/pentagram"
+license:             BSD3
+author:              "Mike Pilgrem"
+maintainer:          "public@pilgrem.com"
+copyright:           "Copyright 2022 Mike Pilgrem"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Test
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/mpilgrem/pentagram#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- containers
+
+ghc-options:
+- -Wall
+
+data-dir: data
+
+data-files:
+- setb.wordlist
+- Wordle.wordlist
+
+library:
+  source-dirs:           src
+  dependencies:
+  - array
+
+executables:
+  pentagram:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

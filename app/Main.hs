@@ -1,18 +1,22 @@
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE ApplicativeDo     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Main (main) where
 
 import Paths_pentagram (getDataFileName)
-import Data.Char (isUpper)
+import Data.Char (isAsciiUpper)
 import Data.List (sortOn)
 import Data.Maybe (mapMaybe)
-import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, (<++), between, char, many,
   readP_to_S, satisfy)
 
 -- From package containers
 import Data.Set (Set, empty, fromList, notMember, singleton)
+
+-- From package optparse-applicative
+import Options.Applicative (Parser, ReadM, (<**>), argument, eitherReader,
+  execParser, footer, fullDesc, header, help, helper, info, metavar, progDesc)
 
 -- Type synonym representing known states of a Wordle tile (yellow
 -- characters, maybe green character).
@@ -40,18 +44,53 @@ instance Semigroup Char where
 -- greyed-out letters (use '.' for none).
 main :: IO ()
 main = do
-  args <- getArgs
+  ws <- execParser opts
   setBWords <- words <$> (readFile =<< getDataFileName "setb.wordlist")
   wordleWords <- words <$> (readFile =<< getDataFileName "Wordle.wordlist")
-  let colourTiles = map (fst . head . readP_to_S readWordleTile) $ take 5 args
-      greyTiles = fromList $ args !! 5
-      ws = WordleState colourTiles greyTiles
-      f = mkFilter ws
+  let f = mkFilter ws
       setBWords' = filter (`notElem` wordleWords) setBWords
       result = filter f setBWords'
       ks' = map (\r -> (fst r, knowledge setBWords' ws r)) (choices result)
       ks = sortOn snd ks'
   print ks
+ where
+  opts = info (wordleState <**> helper)
+    ( fullDesc
+   <> progDesc "Help with (cheat at) Wordle"
+   <> header "pentagram - help with (cheat at) Wordle"
+   <> footer footerMsg )
+  footerMsg = "Examples of valid tile states are: A, [], [BCD], A[BCD], " <>
+              "where A is a green letter and BCD are yellow letters."
+
+wordleState :: Parser WordleState
+wordleState = do
+  wordleTiles <- traverse wordleTileArg [1 .. 5]
+  greyTiles <- greyTilesArg
+  pure $ WordleState wordleTiles greyTiles
+
+wordleTileArg :: Int -> Parser WordleTile
+wordleTileArg n = argument wordleTileReader (metavar $ "TILESTATE" <> show n)
+
+wordleTileReader :: ReadM WordleTile
+wordleTileReader = eitherReader $ \s ->
+  let errMsg = Left $ "Could not interpret argument '" <> s <>
+                      "' as a Wordle tile state."
+  in  case readP_to_S readWordleTile s of
+        [] -> errMsg
+        [r] -> case r of
+                 (wordleTile, "") -> Right wordleTile
+                 _ -> errMsg
+        _ -> errMsg
+
+greyTilesArg :: Parser (Set Char)
+greyTilesArg = argument greyTilesReader (metavar "GREYTILES" <> help helpMsg)
+ where
+  helpMsg = "A sequence of greyed-out letters, for example: EFG. Characters " <>
+            "other than A to Z are ignored. Use '.' if all letters are valid."
+
+greyTilesReader :: ReadM (Set Char)
+greyTilesReader = eitherReader $ \s ->
+  Right $ fromList (filter isAsciiUpper s)
 
 -- Function to create a filter (String -> Bool) from a known Wordle state
 mkFilter :: WordleState -> String -> Bool
@@ -103,5 +142,5 @@ readWordleTile = do
   yellowTiles <- readYellowTiles <++ pure []
   pure (fromList yellowTiles, mGreenTile)
  where
-  readMGreenTile = Just <$> satisfy isUpper
-  readYellowTiles = between (char '[') (char ']') $ many (satisfy isUpper)
+  readMGreenTile = Just <$> satisfy isAsciiUpper
+  readYellowTiles = between (char '[') (char ']') $ many (satisfy isAsciiUpper)

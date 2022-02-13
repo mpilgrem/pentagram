@@ -41,6 +41,8 @@ executables:
   pentagram:
     main:                Main.hs
     source-dirs:         app
+    dependencies:
+    - optparse-applicative
     ghc-options:
     - -threaded
     - -rtsopts

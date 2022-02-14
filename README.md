@@ -9,12 +9,19 @@ It makes use of a curated subset 'B' of the set of English five letter words
 possible Wordle solutions (which are themselves curated) are a member of 'B' and
 'B' may contain words that are not possible Wordle solutions.
 
-None of the Wordle solutions to date that have ended with 'S' have been plurals (the solutions being FLOSS, CRASS, ABYSS, REBUS and TRUSS). 'B' excludes plurals ending with 'S'.
+None of the Wordle solutions to date that have ended with 'S' have been plurals
+(the solutions being FLOSS, CRASS, ABYSS, REBUS and TRUSS). 'B' excludes plurals
+ending with 'S'.
+
+None of the Wordle solutions to date have been obviously offensive. 'B' excludes
+words that might give offense.
 
 Example of use
 --------------
 
-A guess RAISE might result in a Wordle state of 'green grey yellow grey grey', indicating an 'R' in the correct place, an 'I' in the wrong place and no 'A', 'S' or 'E'. That can be analysed with:
+A guess RAISE might result in a Wordle state of 'green grey yellow grey grey',
+indicating an 'R' in the correct place, an 'I' in the wrong place and no 'A',
+'S' or 'E'. That can be analysed with:
 
 ~~~
 > pentagram R [] [I] [] [] ASE
@@ -26,4 +33,5 @@ yielding output:
 [("RIGHT",7),("RIGID",7),("ROBIN",7),("RIGOR",9),("RICIN",11),("RITZY",11)]
 ~~~
 
-This indicates that if one of RIGHT, RIGID and ROBIN is not the solution, it will yield the most information about other possible solutions.
+This indicates that if one of RIGHT, RIGID and ROBIN is not the solution, it
+will yield the most information about other possible solutions.
